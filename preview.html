@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RESQ — Disaster Survival & Rescue Assistant</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-ring { animation: pulse-ring 2s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 antialiased font-sans selection:bg-blue-600 selection:text-white min-h-screen">
+
+  <div id="app" class="flex min-h-screen">
+    <!-- Desktop Sidebar (Image 1) -->
+    <aside class="w-64 bg-[#0B132B] text-slate-300 flex flex-col justify-between flex-shrink-0 h-screen sticky top-0 border-r border-slate-800 select-none hidden md:flex z-30">
+      <div>
+        <!-- Logo -->
+        <div class="p-6 border-b border-slate-800/80 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-lg shadow-red-900/40">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.1 0 2 .9 2 2v2h2c1.1 0 2 .9 2 2s-.9 2-2 2h-2v2c0 1.1-.9 2-2 2s-2-.9-2-2v-2H8c-1.1 0-2-.9-2-2s.9-2 2-2h2V9c0-1.1.9-2 2-2z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xl font-black tracking-wider text-white">RESQ</div>
+            <p class="text-[10px] tracking-widest uppercase font-semibold text-slate-400">
+              Disaster Survival Assistant
+            </p>
+          </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="px-6 pt-6 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          Navigation
+        </div>
+
+        <!-- Nav Items -->
+        <nav class="px-3 space-y-1" id="desktopNav">
+          <!-- Populated by JS -->
+        </nav>
+      </div>
+
+      <!-- Footer Info Box -->
+      <div class="p-4 border-t border-slate-800/80 bg-[#080d1f]">
+        <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 text-xs">
+          <div class="flex items-center gap-2 text-amber-400 font-semibold mb-1">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span>Demo environment</span>
+          </div>
+          <p class="text-[11px] leading-relaxed text-slate-400">
+            Scenario data only. Not connected to live emergency services.
+          </p>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[11px] text-slate-500 px-1 font-medium">
+          <span>RESQ · Hackathon MVP</span>
+          <span class="hover:text-slate-300 cursor-pointer" onclick="setTab('about')">v1.0</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <div class="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
+      <!-- Top Header -->
+      <header class="bg-white border-b border-slate-200 sticky top-0 z-20 px-4 md:px-8 py-3 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleMobileDrawer(true)" class="md:hidden p-2 -ml-1 text-slate-700 hover:text-slate-900 rounded-lg hover:bg-slate-100">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 class="text-base md:text-lg font-bold text-slate-900 leading-tight flex items-center gap-2">
+              <span>Disaster Survival Assistant</span>
+              <span class="hidden sm:inline-block text-[11px] px-2 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                Live Monitor
+              </span>
+            </h1>
+            <p class="text-xs text-slate-500 hidden sm:block">Stay informed. Stay safe. Help others.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 md:gap-3">
+          <!-- Audio Siren Tester Pill -->
+          <button id="sirenBtn" onclick="toggleSirenTest()" class="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition">
+            <span class="text-red-500">🔊</span>
+            <span id="sirenBtnText">Test Siren</span>
+          </button>
+
+          <!-- Offline Mode Toggle -->
+          <button id="offlineToggleBtn" onclick="toggleOfflineMode()" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition">
+            <span id="offlineDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span id="offlineText">Online Mode</span>
+          </button>
+
+          <!-- Location Selector Dropdown -->
+          <div class="relative">
+            <button onclick="toggleLocationDropdown()" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs md:text-sm font-semibold text-slate-800 transition">
+              <svg class="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span id="headerLocationName">Gwalior, MP</span>
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div id="locationDropdown" class="hidden absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50">
+              <div class="px-3 py-1.5 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Switch Disaster Scenario
+              </div>
+              <button onclick="switchScenario('gwalior')" class="w-full text-left px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-50 text-slate-700">
+                <div><div class="font-bold">Gwalior, Madhya Pradesh</div><div class="text-[10px] text-slate-400">Chambal River Basin Flood</div></div>
+              </button>
+              <button onclick="switchScenario('mumbai')" class="w-full text-left px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-50 text-slate-700">
+                <div><div class="font-bold">Mumbai, Maharashtra</div><div class="text-[10px] text-slate-400">Mithi River High Tide & Rainfall</div></div>
+              </button>
+              <button onclick="switchScenario('patna')" class="w-full text-left px-3 py-2 text-xs flex justify-between items-center hover:bg-slate-50 text-slate-700">
+                <div><div class="font-bold">Patna, Bihar</div><div class="text-[10px] text-slate-400">Ganga Basin Overflow Warning</div></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Risk Status Badge -->
+          <div id="headerRiskBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold shadow-2xs">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+            <span id="headerRiskText">HIGH RISK · DEMO</span>
+          </div>
+
+          <!-- Notification Bell -->
+          <button onclick="toggleNotificationsModal(true)" class="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 relative transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-600 rounded-full ring-2 ring-white"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Page Views Container -->
+      <main id="mainContainer" class="flex-1 p-4 md:p-8 max-w-7xl w-full mx-auto">
+        <!-- Rendered dynamically -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Nav Bar (Image 2) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 px-2 py-1.5 flex justify-around items-center shadow-lg">
+    <button onclick="setTab('dashboard')" class="flex flex-col items-center justify-center py-1 px-3 text-blue-600 font-bold">
+      <div class="p-1 rounded-md bg-blue-50">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+      </div>
+      <span class="text-[10px] mt-0.5">Home</span>
+    </button>
+    <button onclick="openSOSModal()" class="flex flex-col items-center justify-center py-1 px-3 text-red-600 font-bold">
+      <div class="p-1 rounded-md bg-red-50">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        </svg>
+      </div>
+      <span class="text-[10px] mt-0.5">SOS</span>
+    </button>
+    <button onclick="setTab('shelters')" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-800">
+      <div class="p-1 rounded-md">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="text-[10px] mt-0.5">Shelters</span>
+    </button>
+    <button onclick="setTab('assistant')" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-800">
+      <div class="p-1 rounded-md">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/>
+        </svg>
+      </div>
+      <span class="text-[10px] mt-0.5">Assistant</span>
+    </button>
+    <button onclick="setTab('guide')" class="flex flex-col items-center justify-center py-1 px-3 text-slate-500 hover:text-slate-800">
+      <div class="p-1 rounded-md">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <span class="text-[10px] mt-0.5">Guide</span>
+    </button>
+  </nav>
+
+  <!-- Mobile Drawer Overlay -->
+  <div id="mobileDrawer" class="hidden fixed inset-0 z-50 md:hidden flex">
+    <div onclick="toggleMobileDrawer(false)" class="fixed inset-0 bg-slate-950/70 backdrop-blur-2xs"></div>
+    <div class="relative w-4/5 max-w-xs bg-[#0B132B] text-slate-300 h-full flex flex-col justify-between z-10 p-5">
+      <div>
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white font-bold">R</div>
+            <span class="text-lg font-black text-white">RESQ</span>
+          </div>
+          <button onclick="toggleMobileDrawer(false)" class="text-slate-400 hover:text-white p-1">✕</button>
+        </div>
+        <nav class="mt-4 space-y-1" id="mobileNavList">
+          <!-- Populated by JS -->
+        </nav>
+      </div>
+      <div class="p-3 bg-slate-900 rounded-xl text-xs text-slate-400">
+        <div class="text-amber-400 font-bold">Demo Environment</div>
+        <p class="text-[10px] mt-0.5">Scenario data only. Not connected to live emergency services.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS Modal (Emergency Rescue Dispatch) -->
+  <div id="sosModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+    <div class="bg-white rounded-3xl max-w-lg w-full border border-red-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-red-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-red-700 flex items-center justify-center font-black text-sm">SOS</div>
+          <div>
+            <h3 class="font-bold text-base">Emergency Rescue Dispatch</h3>
+            <p class="text-[11px] text-red-100">Direct satellite & telemetry broadcast</p>
+          </div>
+        </div>
+        <button onclick="closeSOSModal()" class="w-8 h-8 rounded-full bg-red-700 hover:bg-red-800 flex items-center justify-center text-white">✕</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6" id="sosModalBody">
+        <!-- Injected via JS -->
+      </div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+        <span>Simulation Mode · No live 112 dial</span>
+        <button onclick="closeSOSModal()" class="font-semibold text-slate-700 hover:text-slate-900">Close window</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- "I Am Safe" Modal -->
+  <div id="safeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+    <div class="bg-white rounded-3xl max-w-lg w-full border border-emerald-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-emerald-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center font-bold">✓</div>
+          <div>
+            <h3 class="font-bold text-base">I Am Safe — Broadcast</h3>
+            <p class="text-[11px] text-emerald-100">Notify loved ones & rescue manifests</p>
+          </div>
+        </div>
+        <button onclick="closeSafeModal()" class="w-8 h-8 rounded-full bg-emerald-700 hover:bg-emerald-800 flex items-center justify-center text-white">✕</button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6" id="safeModalBody">
+        <!-- Injected via JS -->
+      </div>
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+        <span>Encrypted check-in log</span>
+        <button onclick="closeSafeModal()" class="font-semibold text-slate-700 hover:text-slate-900">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Popover -->
+  <div id="notificationsModal" class="hidden fixed inset-0 z-50 flex items-start justify-end p-4 sm:p-6 bg-slate-950/30 backdrop-blur-2xs">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full overflow-hidden mt-12">
+      <div class="px-4 py-3 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+          <h4 class="font-bold text-xs uppercase tracking-wider">Live Broadcast Alerts</h4>
+        </div>
+        <button onclick="toggleNotificationsModal(false)" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+      <div class="p-2 divide-y divide-slate-100 max-h-96 overflow-y-auto">
+        <div class="p-3 space-y-1">
+          <div class="flex items-center justify-between text-[10px] text-red-600 font-bold uppercase">
+            <span>Critical Alert</span><span>6 mins ago</span>
+          </div>
+          <div class="font-bold text-xs text-slate-800">Water Level Inundation Warning</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">River basin discharge reached 12,000 cusecs. Residents within 200m of riverbank instructed to move to relief camps.</p>
+        </div>
+        <div class="p-3 space-y-1">
+          <div class="flex items-center justify-between text-[10px] text-blue-600 font-bold uppercase">
+            <span>District Bulletin</span><span>18 mins ago</span>
+          </div>
+          <div class="font-bold text-xs text-slate-800">SDRF Boat Squad Dispatched</div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">2 inflatable rubber motorboats with medical kits mobilized towards Thatipur bridge sector.</p>
+        </div>
+      </div>
+      <div class="p-3 bg-slate-50 border-t border-slate-100 text-center">
+        <button onclick="toggleNotificationsModal(false)" class="text-xs font-bold text-blue-600 hover:text-blue-700">Dismiss all alerts</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Audio synthesizer
+    let audioCtx = null;
+    let sirenOsc = null;
+    let isSirenActive = false;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playBeep(freq = 880, duration = 0.12) {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSafeChime() {
+      try {
+        const ctx = getAudioCtx();
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + idx * 0.1);
+          osc.stop(ctx.currentTime + idx * 0.1 + 0.4);
+        });
+      } catch (e) {}
+    }
+
+    function toggleSirenTest() {
+      if (isSirenActive) {
+        stopSiren();
+      } else {
+        startSiren();
+        document.getElementById('sirenBtn').classList.add('bg-red-600', 'text-white', 'animate-pulse');
+        document.getElementById('sirenBtnText').innerText = 'Siren On (4s)';
+        setTimeout(() => {
+          stopSiren();
+          document.getElementById('sirenBtn').classList.remove('bg-red-600', 'text-white', 'animate-pulse');
+          document.getElementById('sirenBtnText').innerText = 'Test Siren';
+        }, 4000);
+      }
+    }
+
+    function startSiren() {
+      try {
+        const ctx = getAudioCtx();
+        if (sirenOsc) return;
+        isSirenActive = true;
+        sirenOsc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        sirenOsc.type = 'sawtooth';
+        const now = ctx.currentTime;
+        sirenOsc.frequency.setValueAtTime(650, now);
+        for (let i = 0; i < 10; i++) {
+          sirenOsc.frequency.linearRampToValueAtTime(1100, now + i * 1.0 + 0.5);
+          sirenOsc.frequency.linearRampToValueAtTime(650, now + i * 1.0 + 1.0);
+        }
+        gain.gain.setValueAtTime(0.2, now);
+        sirenOsc.connect(gain);
+        gain.connect(ctx.destination);
+        sirenOsc.start(now);
+      } catch (e) {}
+    }
+
+    function stopSiren() {
+      if (sirenOsc) {
+        try { sirenOsc.stop(); sirenOsc.disconnect(); } catch (e) {}
+        sirenOsc = null;
+      }
+      isSirenActive = false;
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const clean = text.replace(/[*#_~]/g, '');
+        const u = new SpeechSynthesisUtterance(clean);
+        u.rate = 0.95;
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    // App State
+    let currentTab = 'dashboard';
+    let currentScenarioKey = 'gwalior';
+    let isOfflineMode = false;
+    let selectedShelterId = 'shelter-1';
+    let shelterFilter = 'all';
+    let activeGuideCategory = 'flood';
+    let guideSearch = '';
+    let completedChecklist = { g1: true, g2: false, g3: false, g4: false };
+
+    const SCENARIOS = {
+      gwalior: {
+        id: "gwalior",
+        name: "Gwalior, Madhya Pradesh",
+        shortName: "Gwalior, MP",
+        riskLevel: "HIGH RISK",
+        riskType: "FLOOD ALERT · DEMO",
+        alertTitle: "Flood risk is high in your area",
+        alertDesc: "Move to higher ground and avoid moving floodwater. Low-lying colonies near Morar river are experiencing rapid inundation.",
+        updatedTime: "10 min ago — DEMO DATA",
+        coordinates: { lat: 26.2183, lng: 78.1828 },
+        shelters: [
+          {
+            id: "shelter-1",
+            name: "Government School Relief Centre",
+            distance: "0.8 km",
+            eta: "11 mins walk (Safe ridge route)",
+            capacity: "185 / 250 Occupied",
+            elevation: "+18m Safe Zone",
+            address: "Near Morar Gate, Ridge Road, Gwalior",
+            phone: "+91 751 244 8901",
+            services: ["Shelter", "Drinking water", "Food", "Power charging"]
+          },
+          {
+            id: "shelter-2",
+            name: "Community Health Centre",
+            distance: "1.4 km",
+            eta: "18 mins walk",
+            capacity: "92 / 120 Occupied",
+            elevation: "+14m Safe Zone",
+            address: "Hospital Road, Thatipur, Gwalior",
+            phone: "+91 751 234 1108",
+            services: ["Medical support", "First aid", "Clean water"]
+          },
+          {
+            id: "shelter-3",
+            name: "Relief Camp - Stadium Grounds",
+            distance: "2.1 km",
+            eta: "25 mins walk",
+            capacity: "340 / 500 Occupied",
+            elevation: "+22m Safe Zone",
+            address: "Captain Roop Singh Stadium Annex, Gwalior",
+            phone: "+91 751 223 9944",
+            services: ["Food", "Water", "Emergency supplies"]
+          }
+        ]
+      },
+      mumbai: {
+        id: "mumbai",
+        name: "Mumbai, Maharashtra",
+        shortName: "Mumbai, MH",
+        riskLevel: "CRITICAL RISK",
+        riskType: "HIGH TIDE + RAINFALL ALERT",
+        alertTitle: "Severe waterlogging in low-lying zones",
+        alertDesc: "Mithi river level exceeded 3.5m danger threshold. Central railway tracks submerged at Sion-Kurla.",
+        updatedTime: "3 min ago — DEMO DATA",
+        coordinates: { lat: 19.0760, lng: 72.8777 },
+        shelters: [
+          {
+            id: "mumbai-1",
+            name: "BMC High School Relief Center, Kurla West",
+            distance: "0.6 km",
+            eta: "8 mins walk",
+            capacity: "140 / 200 Occupied",
+            elevation: "+15m Safe Zone",
+            address: "SG Barve Marg, Kurla West",
+            phone: "+91 22 2650 1199",
+            services: ["Shelter", "Drinking water", "Food", "Medical support"]
+          }
+        ]
+      },
+      patna: {
+        id: "patna",
+        name: "Patna, Bihar",
+        shortName: "Patna, BR",
+        riskLevel: "MODERATE RISK",
+        riskType: "RIVER OVERFLOW WARNING",
+        alertTitle: "River discharge warning in northern wards",
+        alertDesc: "Sone and Ganga river upstream discharge expected. Low lying Diara sectors being monitored.",
+        updatedTime: "25 min ago — DEMO DATA",
+        coordinates: { lat: 25.5941, lng: 85.1376 },
+        shelters: [
+          {
+            id: "patna-1",
+            name: "Rajendra Indoor Stadium Evacuation Hub",
+            distance: "1.1 km",
+            eta: "14 mins walk",
+            capacity: "110 / 300 Occupied",
+            elevation: "+19m Safe Zone",
+            address: "Kankarbagh Main Rd, Patna",
+            phone: "+91 612 235 4400",
+            services: ["Shelter", "Drinking water", "Food", "First aid"]
+          }
+        ]
+      }
+    };
+
+    const navItems = [
+      { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
+      { id: 'sos', label: 'Emergency SOS', icon: 'alert-triangle', highlight: true },
+      { id: 'safe', label: 'I Am Safe', icon: 'shield-check' },
+      { id: 'shelters', label: 'Find Safe Place', icon: 'navigation' },
+      { id: 'report', label: 'Help Someone', icon: 'heart-handshake' },
+      { id: 'guide', label: 'Survival Guide', icon: 'book-open' },
+      { id: 'assistant', label: 'RESQ Assistant', icon: 'bot', badge: 'AI' },
+      { id: 'community', label: 'Community Safety', icon: 'users', count: 3 },
+      { id: 'contacts', label: 'Emergency Contacts', icon: 'phone-call' },
+      { id: 'about', label: 'About RESQ', icon: 'info' }
+    ];
+
+    function renderNav() {
+      const container = document.getElementById('desktopNav');
+      const mobileContainer = document.getElementById('mobileNavList');
+      if (!container) return;
+
+      container.innerHTML = navItems.map(item => {
+        const isActive = currentTab === item.id;
+        return `
+          <button onclick="handleNavClick('${item.id}')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-sm transition ${
+            isActive ? 'bg-slate-800 text-white shadow-sm border border-slate-700/60 font-semibold' : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+          } ${item.highlight && !isActive ? 'text-red-400 hover:text-red-300' : ''}">
+            <div class="flex items-center gap-3">
+              <span class="${isActive ? 'text-blue-400' : item.highlight ? 'text-red-400' : 'text-slate-400'}">${getNavIconSvg(item.icon)}</span>
+              <span>${item.label}</span>
+            </div>
+            ${item.badge ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/30">${item.badge}</span>` : ''}
+            ${item.count ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-700 text-slate-300">${item.count}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      if (mobileContainer) {
+        mobileContainer.innerHTML = navItems.map(item => `
+          <button onclick="handleNavClick('${item.id}'); toggleMobileDrawer(false);" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800/60">
+            <span>•</span>
+            <span>${item.label}</span>
+          </button>
+        `).join('');
+      }
+    }
+
+    function getNavIconSvg(name) {
+      if (name === 'grid') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`;
+      if (name === 'alert-triangle') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>`;
+      if (name === 'shield-check') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>`;
+      if (name === 'navigation') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+      if (name === 'heart-handshake') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+      if (name === 'book-open') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`;
+      if (name === 'bot') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/></svg>`;
+      if (name === 'users') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`;
+      if (name === 'phone-call') return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+      return `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
+    }
+
+    function handleNavClick(tabId) {
+      if (tabId === 'sos') openSOSModal();
+      else if (tabId === 'safe') openSafeModal();
+      else setTab(tabId);
+    }
+
+    function setTab(tabId) {
+      currentTab = tabId;
+      renderNav();
+      renderMainView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchScenario(key) {
+      currentScenarioKey = key;
+      document.getElementById('locationDropdown').classList.add('hidden');
+      const sc = SCENARIOS[key];
+      document.getElementById('headerLocationName').innerText = sc.shortName;
+      document.getElementById('headerRiskText').innerText = `${sc.riskLevel} · DEMO`;
+      selectedShelterId = sc.shelters[0]?.id || '';
+      renderMainView();
+    }
+
+    function toggleLocationDropdown() {
+      document.getElementById('locationDropdown').classList.toggle('hidden');
+    }
+
+    function toggleMobileDrawer(open) {
+      const el = document.getElementById('mobileDrawer');
+      if (open) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function toggleNotificationsModal(open) {
+      const el = document.getElementById('notificationsModal');
+      if (open) el.classList.remove('hidden');
+      else el.classList.add('hidden');
+    }
+
+    function toggleOfflineMode() {
+      isOfflineMode = !isOfflineMode;
+      const dot = document.getElementById('offlineDot');
+      const text = document.getElementById('offlineText');
+      if (isOfflineMode) {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        text.innerText = 'Offline Cached';
+        document.getElementById('offlineToggleBtn').classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-300');
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        text.innerText = 'Online Mode';
+        document.getElementById('offlineToggleBtn').classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-300');
+      }
+    }
+
+    // View Renders
+    function renderMainView() {
+      const container = document.getElementById('mainContainer');
+      const sc = SCENARIOS[currentScenarioKey];
+
+      if (currentTab === 'dashboard') {
+        container.innerHTML = `
+          <div class="space-y-6 md:space-y-8 animate-in fade-in duration-200 pb-12">
+            <!-- Top Hero & Location -->
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div class="space-y-2">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                  <span class="uppercase tracking-wider text-[11px]">DEMO SCENARIO</span>
+                  <span class="text-blue-300">·</span>
+                  <span class="font-normal text-slate-700">Flood response · ${sc.name}</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-[1.15]">
+                  Stay informed. Stay safe.<br /><span class="text-blue-600">Help others.</span>
+                </h2>
+                <p class="text-slate-600 text-sm md:text-base max-w-2xl font-normal leading-relaxed">
+                  Your emergency companion for faster decisions during floods and natural disasters.
+                </p>
+              </div>
+
+              <!-- Location Card -->
+              <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex items-center gap-3.5 min-w-[280px]">
+                <div class="w-11 h-11 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div>
+                  <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">CURRENT LOCATION</div>
+                  <div class="text-sm md:text-base font-bold text-slate-900 leading-tight">${sc.name}</div>
+                  <div class="text-xs text-slate-500 mt-0.5">Demo emergency scenario</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Flood Risk Banner Card (Image 1) -->
+            <div class="bg-white rounded-2xl border border-red-200 border-l-4 border-l-red-600 p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-xl bg-red-50 border border-red-100 text-red-600 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                  </svg>
+                </div>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-red-700 text-white">${sc.riskLevel}</span>
+                    <span class="text-xs font-bold text-red-600 tracking-wide uppercase">${sc.riskType}</span>
+                  </div>
+                  <h3 class="text-lg md:text-xl font-bold text-slate-900">${sc.alertTitle}</h3>
+                  <p class="text-slate-600 text-xs md:text-sm max-w-2xl leading-normal">${sc.alertDesc}</p>
+                  <div class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 pt-1">
+                    <span>🕒</span><span>Updated ${sc.updatedTime}</span>
+                  </div>
+                </div>
+              </div>
+              <button onclick="openSOSModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm tracking-wide shadow-md shadow-red-600/30 transition hover:scale-[1.02] active:scale-[0.98]">
+                <span>⚠ I NEED HELP</span><span>→</span>
+              </button>
+            </div>
+
+            <!-- What do you need right now? -->
+            <div class="space-y-4">
+              <h3 class="text-lg md:text-xl font-bold text-slate-900">What do you need right now?</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div onclick="openSOSModal()" class="bg-white rounded-2xl border border-red-200/80 hover:border-red-400 p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition cursor-pointer group">
+                  <div>
+                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mb-3.5 font-bold">⚠</div>
+                    <h4 class="text-sm font-bold text-slate-900 group-hover:text-red-600 transition">SOS — I NEED HELP</h4>
+                    <p class="text-xs text-slate-500 mt-1">Share my emergency location</p>
+                  </div>
+                  <div class="mt-5 pt-3 border-t border-slate-100 text-xs font-bold text-red-600 flex items-center gap-1">Activate SOS →</div>
+                </div>
+
+                <div onclick="openSafeModal()" class="bg-white rounded-2xl border border-emerald-200/80 hover:border-emerald-400 p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition cursor-pointer group">
+                  <div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3.5 font-bold">✓</div>
+                    <h4 class="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">I AM SAFE</h4>
+                    <p class="text-xs text-slate-500 mt-1">Notify my emergency contacts</p>
+                  </div>
+                  <div class="mt-5 pt-3 border-t border-slate-100 text-xs font-bold text-emerald-600 flex items-center gap-1">Mark as safe →</div>
+                </div>
+
+                <div onclick="setTab('shelters')" class="bg-white rounded-2xl border border-blue-200/80 hover:border-blue-400 p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition cursor-pointer group">
+                  <div>
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3.5 font-bold">✈</div>
+                    <h4 class="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">FIND SAFE PLACE</h4>
+                    <p class="text-xs text-slate-500 mt-1">Find nearby shelters and safe zones</p>
+                  </div>
+                  <div class="mt-5 pt-3 border-t border-slate-100 text-xs font-bold text-blue-600 flex items-center gap-1">Explore shelters →</div>
+                </div>
+
+                <div onclick="setTab('report')" class="bg-white rounded-2xl border border-amber-200/80 hover:border-amber-400 p-5 flex flex-col justify-between shadow-2xs hover:shadow-md transition cursor-pointer group">
+                  <div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3.5 font-bold">♥</div>
+                    <h4 class="text-sm font-bold text-slate-900 group-hover:text-amber-700 transition">HELP SOMEONE</h4>
+                    <p class="text-xs text-slate-500 mt-1">Report a person in danger</p>
+                  </div>
+                  <div class="mt-5 pt-3 border-t border-slate-100 text-xs font-bold text-amber-600 flex items-center gap-1">Send a report →</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Guidance & Stay Prepared Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-base md:text-lg font-bold text-slate-900">Today's safety guidance</h3>
+                  <button onclick="setTab('guide')" class="text-xs font-bold text-blue-600 hover:text-blue-700">View full guide →</button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-xs">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div onclick="toggleCheck('g1')" class="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition cursor-pointer select-none">
+                      <div class="w-6 h-6 rounded-full ${completedChecklist.g1 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'} flex items-center justify-center font-bold text-xs mt-0.5">✓</div>
+                      <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">01</div>
+                        <div class="text-xs md:text-sm font-semibold text-slate-800 ${completedChecklist.g1 ? 'line-through text-slate-400' : ''}">Avoid moving through floodwater.</div>
+                      </div>
+                    </div>
+                    <div onclick="toggleCheck('g2')" class="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition cursor-pointer select-none">
+                      <div class="w-6 h-6 rounded-full ${completedChecklist.g2 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'} flex items-center justify-center font-bold text-xs mt-0.5">✓</div>
+                      <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">02</div>
+                        <div class="text-xs md:text-sm font-semibold text-slate-800 ${completedChecklist.g2 ? 'line-through text-slate-400' : ''}">Keep your phone charged.</div>
+                      </div>
+                    </div>
+                    <div onclick="toggleCheck('g3')" class="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition cursor-pointer select-none">
+                      <div class="w-6 h-6 rounded-full ${completedChecklist.g3 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'} flex items-center justify-center font-bold text-xs mt-0.5">✓</div>
+                      <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">03</div>
+                        <div class="text-xs md:text-sm font-semibold text-slate-800 ${completedChecklist.g3 ? 'line-through text-slate-400' : ''}">Carry water, medicines and essential documents.</div>
+                      </div>
+                    </div>
+                    <div onclick="toggleCheck('g4')" class="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition cursor-pointer select-none">
+                      <div class="w-6 h-6 rounded-full ${completedChecklist.g4 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'} flex items-center justify-center font-bold text-xs mt-0.5">✓</div>
+                      <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase">04</div>
+                        <div class="text-xs md:text-sm font-semibold text-slate-800 ${completedChecklist.g4 ? 'line-through text-slate-400' : ''}">Follow official evacuation instructions.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dark Card (Stay prepared) -->
+              <div class="space-y-3">
+                <h3 class="text-base md:text-lg font-bold text-slate-900">Stay prepared</h3>
+                <div onclick="setTab('guide')" class="bg-[#0B132B] text-white rounded-2xl p-6 shadow-md hover:shadow-xl transition cursor-pointer flex flex-col justify-between h-[calc(100%-2rem)] group border border-slate-800">
+                  <div>
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-blue-400 font-bold">📖</div>
+                      <span class="text-slate-400 group-hover:translate-x-1 transition">→</span>
+                    </div>
+                    <h4 class="text-base font-bold text-white group-hover:text-blue-300 transition">Offline Survival Guide</h4>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">Essential steps for floods, earthquakes, cyclones and heatwaves.</p>
+                  </div>
+                  <div class="mt-6 pt-4 border-t border-slate-800 text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    OFFLINE ACCESS PLANNED FOR PRODUCTION
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer links -->
+            <div class="pt-2 border-t border-slate-200/80 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onclick="setTab('community')" class="flex items-center gap-2 py-2 px-3 rounded-lg text-xs md:text-sm font-semibold text-slate-700 hover:text-blue-600 transition">
+                <span class="text-blue-500 font-bold">≋</span><span>Community updates</span><span class="text-slate-400">→</span>
+              </button>
+              <button onclick="setTab('contacts')" class="flex items-center gap-2 py-2 px-3 rounded-lg text-xs md:text-sm font-semibold text-slate-700 hover:text-blue-600 transition">
+                <span>📞</span><span>Emergency contacts</span><span class="text-slate-400">→</span>
+              </button>
+              <button onclick="setTab('about')" class="flex items-center gap-2 py-2 px-3 rounded-lg text-xs md:text-sm font-semibold text-slate-700 hover:text-blue-600 transition">
+                <span>🛡</span><span>How RESQ works</span><span class="text-slate-400">→</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'shelters') {
+        const shelter = sc.shelters.find(s => s.id === selectedShelterId) || sc.shelters[0];
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">✈</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-600">NEARBY SAFETY · SIMULATION</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Find a Safe Place</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Explore example shelters and simulated risk zones around ${sc.shortName}. These are not verified evacuation routes.</p>
+              </div>
+            </div>
+
+            <!-- SIMULATED MAP (Matching Image 4) -->
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm relative">
+              <div class="absolute top-4 left-4 z-10">
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/95 border border-slate-200 shadow-sm text-slate-800 text-[11px] font-bold">
+                  <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                  <span>SIMULATED MAP</span>
+                </div>
+              </div>
+              <div class="relative w-full h-[320px] sm:h-[400px] bg-[#E8F0E8] overflow-hidden select-none">
+                <svg class="w-full h-full" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+                  <rect width="800" height="450" fill="#EBF4EB"/>
+                  <path d="M 640 -20 C 650 80, 720 120, 710 210 C 700 290, 770 340, 760 470 L 820 470 L 820 -20 Z" fill="#93C5FD" stroke="#60A5FA" strokeWidth="4" opacity="0.85"/>
+                  <path d="M 0 220 Q 300 200, 680 230" fill="none" stroke="#FFFFFF" strokeWidth="9"/>
+                  <path d="M 280 0 Q 300 230, 360 450" fill="none" stroke="#FFFFFF" strokeWidth="8"/>
+                  <path d="M 480 0 Q 510 210, 520 450" fill="none" stroke="#FFFFFF" strokeWidth="8"/>
+
+                  <!-- Risk circles (Image 4) -->
+                  <circle cx="280" cy="190" r="75" fill="#F59E0B" fill-opacity="0.3" stroke="#F59E0B" strokeWidth="2" stroke-dasharray="4 2"/>
+                  <circle cx="410" cy="160" r="65" fill="#10B981" fill-opacity="0.3" stroke="#10B981" strokeWidth="2" stroke-dasharray="4 2"/>
+                  <circle cx="630" cy="180" r="75" fill="#DC2626" fill-opacity="0.3" stroke="#DC2626" strokeWidth="2" stroke-dasharray="4 2"/>
+
+                  <!-- Active Route Preview -->
+                  <path d="M 450 280 L 440 220 L 415 160" fill="none" stroke="#10B981" strokeWidth="5" stroke-linecap="round" stroke-dasharray="8 6" class="animate-pulse"/>
+
+                  <!-- Shelter Pins -->
+                  <g class="cursor-pointer" onclick="selectShelter('shelter-1')">
+                    <circle cx="415" cy="155" r="16" fill="#047857"/>
+                    <path d="M 415 147 L 423 162 L 407 162 Z" fill="white"/>
+                  </g>
+                  <g class="cursor-pointer" onclick="selectShelter('shelter-2')">
+                    <circle cx="550" cy="220" r="14" fill="#047857"/>
+                    <path d="M 550 213 L 557 226 L 543 226 Z" fill="white"/>
+                  </g>
+                  <g class="cursor-pointer" onclick="selectShelter('shelter-3')">
+                    <circle cx="625" cy="110" r="14" fill="#047857"/>
+                    <path d="M 625 103 L 632 116 L 618 116 Z" fill="white"/>
+                  </g>
+
+                  <!-- You Pin -->
+                  <g>
+                    <circle cx="450" cy="280" r="14" fill="#2563EB"/>
+                    <circle cx="450" cy="277" r="3" fill="white"/>
+                    <circle cx="450" cy="280" r="22" fill="none" stroke="#3B82F6" strokeWidth="2" opacity="0.4" class="animate-ping"/>
+                  </g>
+                </svg>
+                <div class="absolute bottom-3 left-3 bg-white/95 rounded-lg px-3 py-1.5 shadow-sm text-[11px] font-semibold flex items-center gap-3.5">
+                  <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span><span>You</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-600"></span><span>High risk</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span>Medium risk</span></div>
+                  <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span><span>Safe zone</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shelter Cards Grid (Image 4) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              ${sc.shelters.map(s => {
+                const isSelected = s.id === selectedShelterId;
+                return `
+                  <div class="bg-white rounded-2xl border ${isSelected ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md' : 'border-slate-200'} p-5 flex flex-col justify-between">
+                    <div>
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">▲</div>
+                        <span class="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-bold text-xs">${s.distance}</span>
+                      </div>
+                      <h3 class="text-base font-bold text-slate-900">${s.name}</h3>
+                      <div class="mt-3">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">AVAILABLE SERVICES · DEMO</div>
+                        <div class="flex flex-wrap gap-1.5">
+                          ${s.services.map(srv => `<span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 font-medium">✓ ${srv}</span>`).join('')}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="mt-5">
+                      ${isSelected ? `
+                        <button class="w-full py-2.5 px-4 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 cursor-default">
+                          ✓ Route preview selected
+                        </button>
+                      ` : `
+                        <button onclick="selectShelter('${s.id}')" class="w-full py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5">
+                          ✈ GET DIRECTIONS
+                        </button>
+                      `}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Route Details Banner (Image 4) -->
+            <div class="bg-emerald-50/80 rounded-2xl border border-emerald-200 p-5 text-emerald-900 space-y-1">
+              <h4 class="font-bold text-sm md:text-base">Demo route to ${shelter.name}</h4>
+              <p class="text-xs md:text-sm text-emerald-800 leading-relaxed">
+                Approximately ${shelter.distance} away. Estimated walk: ${shelter.eta}. No turn-by-turn directions are available in this prototype. Follow official evacuation guidance and avoid floodwater.
+              </p>
+            </div>
+
+            <!-- Disclaimer note -->
+            <div class="bg-blue-50/90 rounded-xl border border-blue-200 p-4 text-xs text-blue-900 flex items-start gap-3">
+              <span>ℹ</span>
+              <p>Demo locations — production version will use verified government/disaster-service data. Map and risk zones are illustrative only.</p>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'assistant') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-3xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">🤖</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-600">QUICK GUIDANCE · RULE-BASED DEMO</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">RESQ Emergency Assistant</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Get quick safety guidance based on your situation. Responses are predefined, not live AI or official instructions.</p>
+              </div>
+            </div>
+
+            <!-- Chat Card (Image 3) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-[#0B132B] text-white flex items-center justify-center font-bold">🛡</div>
+                  <div>
+                    <div class="text-xs font-bold text-slate-900">RESQ Assistant</div>
+                    <div class="text-[10px] text-slate-500">Safety guidance · Demo</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">PREDEFINED RESPONSES</span>
+              </div>
+
+              <div id="chatStream" class="p-4 md:p-6 space-y-4 max-h-[420px] overflow-y-auto bg-slate-50/30">
+                <div class="flex flex-col items-start space-y-1">
+                  <div class="max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm bg-white text-slate-800 border border-slate-200/90 rounded-bl-xs leading-relaxed">
+                    ⚠️ If the structure is safe, move to the highest safe level available. Avoid contact with floodwater and electrical equipment. Activate SOS and share your location. Follow instructions from official rescue authorities.
+                  </div>
+                  <button onclick="speakText('If the structure is safe, move to the highest safe level available. Avoid contact with floodwater and electrical equipment. Activate SOS and share your location.')" class="text-[10px] text-slate-400 hover:text-blue-600 px-1">🔈 Read aloud</button>
+                </div>
+
+                <div class="flex flex-col items-end space-y-1">
+                  <div class="max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm bg-[#0B132B] text-white rounded-br-xs font-medium">
+                    I'm trapped
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-start space-y-1">
+                  <div class="max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm bg-white text-slate-800 border border-slate-200/90 rounded-bl-xs leading-relaxed">
+                    ⚠️ If you are trapped, move to the highest safe place without crossing floodwater. Keep away from electricity, signal for help, and contact official emergency services. You can also open the demo SOS screen here, but it does not send a real request.
+                  </div>
+                  <button onclick="speakText('If you are trapped, move to the highest safe place without crossing floodwater. Keep away from electricity, signal for help, and contact official emergency services.')" class="text-[10px] text-slate-400 hover:text-blue-600 px-1">🔈 Read aloud</button>
+                </div>
+              </div>
+
+              <!-- Quick Chips (Image 3) -->
+              <div class="p-3 bg-white border-t border-slate-100 flex items-center gap-2 overflow-x-auto select-none">
+                <button onclick="sendAssistantMsg('I\\'m trapped')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-xs font-medium whitespace-nowrap">I'm trapped</button>
+                <button onclick="sendAssistantMsg('Water is rising')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-xs font-medium whitespace-nowrap">Water is rising</button>
+                <button onclick="sendAssistantMsg('Someone is injured')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-xs font-medium whitespace-nowrap">Someone is injured</button>
+                <button onclick="sendAssistantMsg('Where should I evacuate?')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-xs font-medium whitespace-nowrap">Where should I evacuate?</button>
+                <button onclick="sendAssistantMsg('What should I carry?')" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-xs font-medium whitespace-nowrap">What should I carry?</button>
+              </div>
+
+              <!-- Input form -->
+              <div class="p-3.5 bg-white border-t border-slate-200">
+                <div class="border border-slate-200 rounded-xl p-2.5 relative">
+                  <textarea id="assistantInput" rows="2" placeholder="Describe your situation..." class="w-full text-xs md:text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden resize-none pr-10"></textarea>
+                  <button onclick="handleUserSubmit()" class="absolute right-2.5 bottom-2.5 w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center font-bold">↵</button>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+                  <span>For immediate danger, call official emergency services.</span>
+                  <button onclick="openSOSModal()" class="font-bold text-red-600 hover:text-red-700">Preview SOS ⚠️</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-blue-50/90 rounded-xl border border-blue-200 p-4 flex items-start gap-3 text-xs text-blue-900">
+              <span>ℹ</span>
+              <p>This rule-based prototype cannot assess real conditions, contact responders or provide verified live information.</p>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'report') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-2xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 font-bold text-xl">♥</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-amber-600">COMMUNITY FIRST RESPONDER · DISPATCH</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Report a Person in Danger</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Report stranded neighbors or individuals needing urgent rescue boats in ${sc.shortName}.</p>
+              </div>
+            </div>
+
+            <form onsubmit="handleReportSubmit(event)" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+              <div>
+                <label class="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">Threat Urgency Level:</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <label class="p-3 rounded-xl border border-red-500 bg-red-50 text-red-700 font-bold text-xs text-center cursor-pointer">
+                    <input type="radio" name="urgency" value="Critical" checked class="mr-1"> Critical
+                  </label>
+                  <label class="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center cursor-pointer">
+                    <input type="radio" name="urgency" value="High" class="mr-1"> High
+                  </label>
+                  <label class="p-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center cursor-pointer">
+                    <input type="radio" name="urgency" value="Moderate" class="mr-1"> Moderate
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1">Exact Landmark or Location:</label>
+                <input type="text" required placeholder="e.g. Near Morar river culvert, 2-storey yellow house..." class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-hidden focus:border-amber-500">
+              </div>
+
+              <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1">Estimated People Count & Water Depth:</label>
+                <div class="grid grid-cols-2 gap-3">
+                  <select class="text-xs p-3 rounded-xl border border-slate-200 bg-white">
+                    <option>1 Person</option><option selected>Group (2-3 people)</option><option>Family (4-6 people)</option><option>Large Group (7+)</option>
+                  </select>
+                  <select class="text-xs p-3 rounded-xl border border-slate-200 bg-white">
+                    <option>Ankle to Knee deep</option><option selected>Waist deep (1.0m)</option><option>Chest deep</option><option>Trapped on Roof</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1">Visible Situation & Special Needs:</label>
+                <textarea rows="3" placeholder="Elderly person with arthritis, no drinking water since morning..." class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-hidden focus:border-amber-500 resize-none"></textarea>
+              </div>
+
+              <button type="submit" class="w-full py-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition">
+                SUBMIT RESCUE REPORT TO NDRF / VOLUNTEERS
+              </button>
+            </form>
+          </div>
+        `;
+      } else if (currentTab === 'guide') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-4xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl">📖</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-600">OFFLINE FIELD SURVIVAL MANUAL</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Disaster Survival Guide</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Critical procedures when networks fail and emergency workers cannot reach immediately.</p>
+              </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1">
+              <button onclick="setGuideCategory('flood')" class="px-4 py-2.5 rounded-xl text-xs font-bold ${activeGuideCategory === 'flood' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'}">Flood Protocol</button>
+              <button onclick="setGuideCategory('earthquake')" class="px-4 py-2.5 rounded-xl text-xs font-bold ${activeGuideCategory === 'earthquake' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'}">Earthquake Safety</button>
+              <button onclick="setGuideCategory('cyclone')" class="px-4 py-2.5 rounded-xl text-xs font-bold ${activeGuideCategory === 'cyclone' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'}">Cyclone & Wind</button>
+              <button onclick="setGuideCategory('firstaid')" class="px-4 py-2.5 rounded-xl text-xs font-bold ${activeGuideCategory === 'firstaid' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200'}">First Aid & CPR</button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+              <h3 class="text-xl font-black text-slate-900">${activeGuideCategory === 'flood' ? 'Flood & Swift Water Survival' : activeGuideCategory === 'earthquake' ? 'Earthquake Drop-Cover-Hold' : activeGuideCategory === 'cyclone' ? 'Cyclone Evacuation' : 'Emergency CPR & Trauma'}</h3>
+              
+              <div class="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div class="font-bold text-slate-900">1. Immediate Life Preservation</div>
+                  <p>Never walk or drive across moving floodwaters. Just 6 inches of rapid current can topple an adult, and 12 inches can float a car. Switch off main breakers.</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div class="font-bold text-slate-900">2. Water & Nutrition Safety</div>
+                  <p>Assume municipal and borewell water is contaminated with sewer lines. Boil for at least 1 full minute or use Chlorine Halazone tablets before consumption.</p>
+                </div>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                  <div class="font-bold text-slate-900">3. Rescue Signaling</div>
+                  <p>Wave a bright cloth or flash a torch in 3 short bursts (S-O-S). Do not hide in closed attics unless there is an accessible roof hatch.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'contacts') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-4xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 font-bold text-xl">📞</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-red-600">RAPID RESPONSE HOTLINES</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Emergency Contacts Directory</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Verified governmental rescue departments in ${sc.shortName}.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-400">NATIONAL RESCUE</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700">24x7 TOLL FREE</span></div>
+                <h3 class="font-bold text-base text-slate-900">National Disaster Response Force (NDRF)</h3>
+                <div class="text-2xl font-black text-slate-900">1078</div>
+                <a href="tel:1078" class="block w-full py-2.5 text-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold">Call 1078</a>
+              </div>
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-400">POLICE / ALL EMERGENCIES</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700">PRIORITY</span></div>
+                <h3 class="font-bold text-base text-slate-900">Unified Emergency Response</h3>
+                <div class="text-2xl font-black text-slate-900">112</div>
+                <a href="tel:112" class="block w-full py-2.5 text-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold">Call 112</a>
+              </div>
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-400">MEDICAL AMBULANCE</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700">FREE AMBULANCE</span></div>
+                <h3 class="font-bold text-base text-slate-900">Ambulance & Trauma Services</h3>
+                <div class="text-2xl font-black text-slate-900">108</div>
+                <a href="tel:108" class="block w-full py-2.5 text-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold">Call 108</a>
+              </div>
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
+                <div class="flex justify-between items-center"><span class="text-xs font-bold text-slate-400">DISTRICT CONTROL</span><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">LOCAL OPS</span></div>
+                <h3 class="font-bold text-base text-slate-900">${sc.shortName} Flood Control Room</h3>
+                <div class="text-xl font-black text-slate-900">0751-2446200</div>
+                <a href="tel:07512446200" class="block w-full py-2.5 text-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold">Call Control Room</a>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'community') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-3xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">👥</div>
+              <div class="space-y-1">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-600">LIVE GROUND SITUATION</div>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Community Safety Feed</h2>
+                <p class="text-xs sm:text-sm text-slate-600">Crowdsourced observations by volunteers and residents in ${sc.shortName}.</p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-bold text-slate-900">Rakesh Verma (Volunteer) <span class="text-blue-600 font-normal">· Verified</span></span>
+                  <span class="text-red-600 font-bold">CRITICAL</span>
+                </div>
+                <p class="text-xs sm:text-sm text-slate-700">Morar bridge approaches have 1.5m flowing water. Two stalled autorickshaws were cleared by SDRF boat. Please avoid crossing!</p>
+                <div class="pt-2 flex justify-between items-center text-xs text-slate-400">
+                  <span>14 mins ago</span>
+                  <span class="text-blue-600 font-bold">👍 42 Confirmations</span>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-2xl border border-slate-200 p-5 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-bold text-slate-900">Dr. A. K. Saxena <span class="text-emerald-600 font-normal">· Medical Officer</span></span>
+                  <span class="text-emerald-600 font-bold">SUPPLIES</span>
+                </div>
+                <p class="text-xs sm:text-sm text-slate-700">Fresh supply of ORS, baby food, and clean water bottles arrived at Government School Relief Centre.</p>
+                <div class="pt-2 flex justify-between items-center text-xs text-slate-400">
+                  <span>38 mins ago</span>
+                  <span class="text-blue-600 font-bold">👍 28 Confirmations</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'about') {
+        container.innerHTML = `
+          <div class="space-y-6 animate-in fade-in duration-200 max-w-3xl mx-auto pb-12">
+            <button onclick="setTab('dashboard')" class="inline-flex items-center gap-1.5 text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900">
+              ← Back to dashboard
+            </button>
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 md:p-8 space-y-6">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-red-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-red-600/30">R</div>
+                <div>
+                  <h2 class="text-2xl font-black text-slate-900">RESQ — Disaster Survival & Rescue</h2>
+                  <p class="text-xs md:text-sm text-slate-500">Hackathon Edition · High-Resilience Emergency Frontend</p>
+                </div>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed border-t border-slate-100 pt-4">
+                Built with modern React and Tailwind CSS. RESQ delivers a life-saving interface featuring offline survival procedures, audible Web Audio emergency sirens, GPS distress broadcasting, and interactive safe shelter routing.
+              </p>
+              <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
+                <strong>⚠️ Hackathon Demo Notice:</strong> Displaying simulated data. In a real life-threatening emergency, dial 112 or 1078 directly.
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function toggleCheck(id) {
+      completedChecklist[id] = !completedChecklist[id];
+      renderMainView();
+    }
+
+    function selectShelter(id) {
+      selectedShelterId = id;
+      renderMainView();
+    }
+
+    function setGuideCategory(cat) {
+      activeGuideCategory = cat;
+      renderMainView();
+    }
+
+    function handleReportSubmit(e) {
+      e.preventDefault();
+      alert("Rescue ticket created successfully! Reference #REP-" + Math.floor(1000 + Math.random() * 9000));
+      setTab('dashboard');
+    }
+
+    function sendAssistantMsg(text) {
+      const stream = document.getElementById('chatStream');
+      if (!stream) return;
+      playBeep(440, 0.08);
+
+      // Append user msg
+      const userDiv = document.createElement('div');
+      userDiv.className = 'flex flex-col items-end space-y-1';
+      userDiv.innerHTML = `<div class="max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm bg-[#0B132B] text-white rounded-br-xs font-medium">${text}</div>`;
+      stream.appendChild(userDiv);
+
+      setTimeout(() => {
+        let answer = "⚠️ For your safety, stay on high ground and avoid contact with floodwaters. Keep phone dry. Dial 112 or 1078 for emergency evacuation.";
+        if (text.includes("trapped")) answer = "⚠️ If you are trapped, move to the highest safe place without crossing floodwater. Keep away from electricity, signal for help, and contact official emergency services (112 / 1078).";
+        else if (text.includes("rising")) answer = "🌊 If floodwater is entering, shut off main electricity breaker and cooking gas valves. Move elderly and children to upper floors. Do not wade through moving currents.";
+        else if (text.includes("injured")) answer = "🩹 For bleeding, apply direct pressure with a clean cloth. Elevate limb. Keep patient warm. Contact Ambulance 108 immediately.";
+        else if (text.includes("evacuate")) answer = "📍 The nearest safe elevation zone is Government School Relief Centre (0.8 km). Check the Shelters tab for verified ridge routes.";
+        else if (text.includes("carry")) answer = "🎒 Carry your Go-Bag: 2L water, essential medications, ID documents in ziplock, power bank, and whistle.";
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'flex flex-col items-start space-y-1';
+        botDiv.innerHTML = `
+          <div class="max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm bg-white text-slate-800 border border-slate-200/90 rounded-bl-xs leading-relaxed">
+            ${answer}
+          </div>
+          <button onclick="speakText('${answer.replace(/'/g, "\\'")}')" class="text-[10px] text-slate-400 hover:text-blue-600 px-1">🔈 Read aloud</button>
+        `;
+        stream.appendChild(botDiv);
+        stream.scrollTop = stream.scrollHeight;
+      }, 400);
+    }
+
+    function handleUserSubmit() {
+      const input = document.getElementById('assistantInput');
+      if (input && input.value.trim()) {
+        sendAssistantMsg(input.value.trim());
+        input.value = '';
+      }
+    }
+
+    // SOS Modal Logic
+    let sosTimer = null;
+    let sosCountdown = 5;
+
+    function openSOSModal() {
+      document.getElementById('sosModal').classList.remove('hidden');
+      sosCountdown = 5;
+      renderSOSStart();
+    }
+
+    function closeSOSModal() {
+      if (sosTimer) clearInterval(sosTimer);
+      stopSiren();
+      document.getElementById('sosModal').classList.add('hidden');
+    }
+
+    function renderSOSStart() {
+      const sc = SCENARIOS[currentScenarioKey];
+      document.getElementById('sosModalBody').innerHTML = `
+        <div class="text-center space-y-5">
+          <div>
+            <span class="text-xs font-bold text-red-600 uppercase tracking-wider">Critical Danger Mode</span>
+            <h4 class="text-xl font-black text-slate-900 mt-1">Tap to Broadcast Distress Signal</h4>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto mt-1">A 5-second countdown will start before alerting simulated emergency services.</p>
+          </div>
+          <div class="flex justify-center py-2">
+            <button onclick="startSOSCountdown()" class="w-40 h-40 rounded-full bg-red-600 hover:bg-red-700 text-white font-black text-3xl shadow-xl shadow-red-600/40 ring-8 ring-red-100 flex flex-col items-center justify-center gap-1 transition hover:scale-105 active:scale-95 cursor-pointer">
+              <span>SOS</span>
+              <span class="text-[10px] font-semibold uppercase opacity-80">PRESS HERE</span>
+            </button>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left text-xs space-y-2">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Telemetry Payload</div>
+            <div class="grid grid-cols-2 gap-2 text-slate-700">
+              <div>📍 ${sc.coordinates.lat}°N, ${sc.coordinates.lng}°E</div>
+              <div>🔋 Battery: 78% (Healthy)</div>
+              <div>📶 4G Signal Strong</div>
+              <div>🌊 ${sc.riskLevel}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function startSOSCountdown() {
+      sosCountdown = 5;
+      document.getElementById('sosModalBody').innerHTML = `
+        <div class="text-center py-6 space-y-6">
+          <div class="text-xs font-bold text-red-600 uppercase tracking-wider animate-pulse">ARMING DISTRESS BEACON...</div>
+          <div id="sosCountBox" class="w-28 h-28 mx-auto rounded-full bg-red-50 border-4 border-red-600 flex items-center justify-center text-5xl font-black text-red-600 animate-pulse">
+            5
+          </div>
+          <p class="text-xs text-slate-500">Loud distress tone sounding. Press cancel immediately if triggered by accident.</p>
+          <button onclick="renderSOSStart()" class="px-6 py-3 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-sm">CANCEL TRANSMISSION</button>
+        </div>
+      `;
+      playBeep(600, 0.15);
+
+      sosTimer = setInterval(() => {
+        sosCountdown--;
+        if (sosCountdown > 0) {
+          playBeep(600 + (5 - sosCountdown) * 120, 0.15);
+          const box = document.getElementById('sosCountBox');
+          if (box) box.innerText = sosCountdown;
+        } else {
+          clearInterval(sosTimer);
+          triggerSOSDispatched();
+        }
+      }, 1000);
+    }
+
+    function triggerSOSDispatched() {
+      startSiren();
+      const ticket = 'SOS-' + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('sosModalBody').innerHTML = `
+        <div class="space-y-5 animate-in zoom-in-95 duration-200">
+          <div class="bg-red-50 border border-red-200 rounded-2xl p-4 text-center space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xl">✓</div>
+            <h4 class="text-lg font-bold text-red-900">DISTRESS SIGNAL ACTIVE</h4>
+            <div class="text-xs font-semibold text-red-700">Dispatch Ticket: #${ticket}</div>
+            <p class="text-xs text-red-600">Coordinates transmitted to NDRF Control Desk & Local Relief Sector. Stay in safe position.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="stopSiren()" class="py-3 px-4 rounded-xl bg-amber-600 text-white font-bold text-xs">🔈 Silence Siren</button>
+            <button onclick="alert('SOS Distress SMS copied to clipboard!')" class="py-3 px-4 rounded-xl bg-blue-600 text-white font-bold text-xs">📋 Share via SMS</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Safe Modal Logic
+    function openSafeModal() {
+      document.getElementById('safeModal').classList.remove('hidden');
+      document.getElementById('safeModalBody').innerHTML = `
+        <div class="text-center space-y-5">
+          <div class="w-20 h-20 mx-auto rounded-full bg-emerald-50 border-2 border-emerald-200 flex items-center justify-center text-emerald-600 text-3xl font-bold">✓</div>
+          <div>
+            <h4 class="text-xl font-black text-slate-900">Are you in a secure location?</h4>
+            <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">One tap will mark your profile as safe in the local district register and notify emergency contacts.</p>
+          </div>
+          <button onclick="markAsSafeConfirmed()" class="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base shadow-lg shadow-emerald-600/30 transition">
+            ✓ YES, MARK ME AS SAFE
+          </button>
+        </div>
+      `;
+    }
+
+    function markAsSafeConfirmed() {
+      playSafeChime();
+      document.getElementById('safeModalBody').innerHTML = `
+        <div class="space-y-5 animate-in zoom-in-95 duration-200">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-full bg-emerald-600 text-white flex items-center justify-center text-2xl font-bold">✓</div>
+            <h4 class="text-lg font-black text-emerald-900">YOU ARE MARKED AS SAFE</h4>
+            <p class="text-xs text-emerald-700">District Registry Updated · Sent to 3 Emergency Contacts ✓✓</p>
+          </div>
+          <button onclick="alert('Safe status copied to clipboard for WhatsApp!')" class="w-full py-3 rounded-xl bg-slate-900 text-white font-bold text-xs">
+            📋 Copy & Share Status Notice
+          </button>
+        </div>
+      `;
+    }
+
+    function closeSafeModal() {
+      document.getElementById('safeModal').classList.add('hidden');
+    }
+
+    // Initialize App
+    renderNav();
+    renderMainView();
+  </script>
+</body>
+</html>
